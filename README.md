@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cultural Fusion Concept Generator
 
-## Getting Started
+A web application that supports combinational creativity in design by generating
+structured fusion concepts from two cultural or visual traditions.
 
-First, run the development server:
+Built for: Introduction to Artificial Intelligence and Arts (11420CS560400), NTHU  
+Student: 曾世賢 (112006274)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## What it does
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The system accepts two cultural or visual sources, a design domain, and a mood.
+It uses GPT-4o to extract visual features from each source and combine them into
+a structured design concept, then generates three prompt directions. The user
+can visualize any direction using gpt-image-1. All concepts are saved locally.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Setup
 
-To learn more about Next.js, take a look at the following resources:
+### Prerequisites
+- Node.js 18 or higher
+- An OpenAI API key with access to GPT-4o and gpt-image-1
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Clone the repository and enter the project folder:
+   ```
+   cd cultural-fusion-generator
+   ```
 
-## Deploy on Vercel
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Create a `.env.local` file in the project root:
+   ```
+   OPENAI_API_KEY=your-openai-api-key-here
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Create the data directory and initialize storage:
+   ```
+   mkdir data
+   echo [] > data/concepts.json
+   ```
+
+5. Start the development server:
+   ```
+   npm run dev
+   ```
+
+6. Open `http://localhost:3002` in your browser
+   (or whichever port Next.js assigns if 3002 is occupied)
+
+---
+
+## How to use
+
+1. Enter Source A — a cultural or visual tradition (e.g. "Indonesian batik")
+2. Enter Source B — a second tradition (e.g. "Cyberpunk neon signage")
+3. Enter a Domain — where the concept will be applied (e.g. "Cafe interior")
+4. Enter a Mood — optional emotional direction (e.g. "Calm but futuristic")
+5. Click **Generate Concept**
+6. Read the fusion concept and visual feature lists
+7. Click **Generate Image** on any of the three prompt directions
+8. View saved concepts at `/history`
+
+---
+
+## Architecture
+
+- **Frontend:** Next.js 14 (App Router), React, TypeScript, Tailwind CSS
+- **API routes:** Next.js server-side routes (no separate backend)
+- **Concept generation:** OpenAI GPT-4o with structured JSON output
+- **Image generation:** OpenAI gpt-image-1
+- **Storage:** Local JSON file (`data/concepts.json`)
+
+All OpenAI API calls are made server-side. The API key is never exposed
+to the browser.
+
+---
+
+## Evaluation test cases
+
+| Source A | Source B | Domain |
+|---|---|---|
+| Indonesian batik | Cyberpunk neon signage | Cafe interior |
+| Taiwanese temple signage | Art Deco poster style | Poster design |
+| Japanese woodblock print | Brutalist architecture | Building facade |
+
+---
+
+## Notes
+
+- Generated image URLs may expire after approximately 1 hour. For demos,
+  generate images shortly before presenting.
+- The system prompt instructs GPT-4o to distinguish between the three
+  prompt directions by focus: form/structure, color/atmosphere,
+  and detail/ornamentation.
+- Concepts are saved automatically when the result page loads.
+  Images are saved when generated.

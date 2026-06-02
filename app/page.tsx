@@ -1,101 +1,152 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
+import InputForm from "@/app/components/InputForm";
+import Link from "next/link";
+
+interface FormData {
+  sourceA: string;
+  sourceB: string;
+  domain: string;
+  mood: string;
+}
+
+const HOW_IT_WORKS = [
+  {
+    icon: "🔀",
+    title: "You choose the sources",
+    description: "Pick two cultural or visual traditions and a design domain.",
+  },
+  {
+    icon: "⚙️",
+    title: "AI structures the fusion",
+    description:
+      "GPT-4o extracts visual features from each source and combines them into a coherent concept — not a random mix.",
+  },
+  {
+    icon: "🖼",
+    title: "You guide the image",
+    description:
+      "Choose which of three prompt directions to visualize with DALL-E 3.",
+  },
+];
+
+export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (data: FormData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const conceptId = uuidv4();
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Request failed (${res.status})`);
+      }
+
+      const output = await res.json();
+
+      const fullConcept = {
+        id: conceptId,
+        createdAt: new Date().toISOString(),
+        input: {
+          sourceA: data.sourceA,
+          sourceB: data.sourceB,
+          domain: data.domain,
+          mood: data.mood,
+        },
+        output,
+      };
+
+      try {
+        sessionStorage.setItem("fusionConcept", JSON.stringify(fullConcept));
+        sessionStorage.setItem("fusionInput", JSON.stringify(data));
+      } catch {
+        throw new Error(
+          "Could not save concept to session storage. Please allow storage in your browser."
+        );
+      }
+
+      router.push("/result");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-16 bg-gray-50">
+      {loading ? (
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+          <p className="text-gray-600">Generating your fusion concept…</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      ) : (
+        <div className="w-full max-w-xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Cultural Fusion Concept Generator
+            </h1>
+            <p className="mt-2 text-gray-500">
+              Combine two visual traditions into a structured design concept
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <InputForm onSubmit={handleSubmit} />
+
+          {/* About section */}
+          <div className="mt-8">
+            <h2 className="mb-4 text-center text-sm font-semibold uppercase tracking-widest text-gray-400">
+              How it works
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {HOW_IT_WORKS.map((step) => (
+                <div key={step.title} className="text-center">
+                  <div className="mb-2 text-2xl">{step.icon}</div>
+                  <p className="mb-1 text-sm font-semibold text-gray-700">
+                    {step.title}
+                  </p>
+                  <p className="text-xs leading-relaxed text-gray-500">
+                    {step.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 text-center text-xs text-gray-400">
+              This tool supports combinational creativity — producing new ideas
+              by combining existing visual systems in structured, intentional
+              ways.
+            </p>
+          </div>
+
+          <p className="mt-6 text-center text-sm">
+            <Link
+              href="/history"
+              className="text-indigo-600 underline hover:text-indigo-800"
+            >
+              View History
+            </Link>
+          </p>
+        </div>
+      )}
+    </main>
   );
 }
